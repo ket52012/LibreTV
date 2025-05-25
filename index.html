@@ -439,40 +439,41 @@
             // 确保所有API默认选中
             selectAllAPIs(true);
 
-            // 确保豆瓣推荐默认开启
-            const doubanToggle = document.getElementById('doubanToggle');
-            const doubanArea = document.getElementById('doubanArea');
-            const doubanResults = document.getElementById('douban-results');
+            // 确保黄色内容过滤默认关闭
             const yellowFilterToggle = document.getElementById('yellowFilterToggle');
-
             if (yellowFilterToggle) {
-                // 确保黄色内容过滤默认关闭
                 yellowFilterToggle.checked = false;
                 const toggleDot = yellowFilterToggle.parentElement.querySelector('.toggle-dot');
                 if (toggleDot) {
                     toggleDot.classList.remove('translate-x-6');
                 }
                 // 触发change事件以更新相关逻辑
-                const event = new Event('change');
-                yellowFilterToggle.dispatchEvent(event);
+                const filterEvent = new Event('change');
+                yellowFilterToggle.dispatchEvent(filterEvent);
+                // 清除可能的黄色过滤缓存
+                localStorage.removeItem('yellowFilter');
             }
+
+            // 确保豆瓣推荐默认开启
+            const doubanToggle = document.getElementById('doubanToggle');
+            const doubanArea = document.getElementById('doubanArea');
+            const doubanResults = document.getElementById('douban-results');
 
             if (doubanToggle && doubanArea && doubanResults) {
                 // 确保开关选中
                 doubanToggle.checked = true;
-                // 确保区域可见
                 doubanArea.classList.remove('hidden');
                 // 临时隐藏推荐内容，防止闪烁
                 doubanResults.style.display = 'none';
                 // 触发开关的change事件
-                const event = new Event('change');
-                doubanToggle.dispatchEvent(event);
+                const toggleEvent = new Event('change');
+                doubanToggle.dispatchEvent(toggleEvent);
 
-                // 清除可能的豆瓣缓存（需确认实际键名）
+                // 清除可能的豆瓣缓存
                 localStorage.removeItem('doubanCache');
                 localStorage.removeItem('doubanRecommendations');
 
-                // 直接调用刷新函数
+                // 优先调用refreshDouban（假设为“换一批”函数）
                 if (typeof refreshDouban === 'function') {
                     try {
                         const refreshPromise = refreshDouban();
@@ -491,7 +492,7 @@
                         doubanResults.style.display = 'grid';
                     }
                 } else if (typeof loadDoubanRecommendations === 'function') {
-                    // 备选：调用加载函数
+                    // 备选：调用loadDoubanRecommendations
                     try {
                         const loadPromise = loadDoubanRecommendations();
                         if (loadPromise && typeof loadPromise.then === 'function') {
