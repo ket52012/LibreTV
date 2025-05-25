@@ -127,7 +127,7 @@
             <div class="p-3 bg-[#151515] rounded-lg shadow-inner">
                 <label class="block text-sm font-medium text-gray-400 mb-3 border-b border-[#333] pb-1">功能开关</label>
                 
-                <!-- 黄色内容过滤开关 -->
+                <!-- 黄色内容过滤开关（默认关闭） -->
                 <div class="flex flex-col mb-3 pb-3 border-b border-[#222] relative">
                     <div class="flex items-center justify-between">
                         <div>
@@ -272,13 +272,12 @@
             
             <!-- 搜索结果：初始隐藏 -->
             <div id="resultsArea" class="w-full hidden">
-                <div class="mx-auto max-w-7xl px-2"> <!-- 添加最大宽度限制并居中 -->
+                <div class="mx-auto max-w-7xl px-2">
                     <div class="flex justify-end items-center mb-4">
                         <div class="text-sm text-gray-400">
                             <span id="searchResultsCount">0</span> 个结果
                         </div>
                     </div>
-                    <!-- 修改网格布局以适应大一些的横向卡片 -->
                     <div id="results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         <!-- 结果将在这里动态生成 -->
                     </div>
@@ -425,7 +424,6 @@
         window.__ENV__ = window.__ENV__ || {};
         
         // 注入服务器端环境变量 (将由服务器端替换)
-        // PASSWORD 变量将在这里被服务器端注入
         window.__ENV__.PASSWORD = "{{PASSWORD}}";
     </script>
 
@@ -435,7 +433,7 @@
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
     <script src="js/index-page.js"></script>
 
-    <!-- Initialize APIs and Douban recommendations -->
+    <!-- 初始化API和豆瓣推荐 -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             // 确保所有API默认选中
@@ -444,22 +442,84 @@
             // 确保豆瓣推荐默认开启
             const doubanToggle = document.getElementById('doubanToggle');
             const doubanArea = document.getElementById('doubanArea');
-            if (doubanToggle && doubanArea) {
-                doubanToggle.checked = true; // 确保开关选中
-                doubanArea.classList.remove('hidden'); // 确保区域可见
-                // 触发开关的change事件，以调用相关逻辑
+            const doubanResults = document.getElementById('douban-results');
+            const yellowFilterToggle = document.getElementById('yellowFilterToggle');
+
+            if (yellowFilterToggle) {
+                // 确保黄色内容过滤默认关闭
+                yellowFilterToggle.checked = false;
+                const toggleDot = yellowFilterToggle.parentElement.querySelector('.toggle-dot');
+                if (toggleDot) {
+                    toggleDot.classList.remove('translate-x-6');
+                }
+                // 触发change事件以更新相关逻辑
                 const event = new Event('change');
-                doubanToggle.dispatchEvent(event);
+                yellowFilterToggle.dispatchEvent(event);
             }
 
-            // 模拟点击“换一批”按钮或直接调用刷新函数
-            const doubanRefreshBtn = document.getElementById('douban-refresh');
-            if (doubanRefreshBtn) {
-                // 触发“换一批”按钮的点击事件
-                doubanRefreshBtn.click();
-            } else if (typeof refreshDouban === 'function') {
-                // 直接调用刷新函数（如果存在）
-                refreshDouban();
+            if (doubanToggle && doubanArea && doubanResults) {
+                // 确保开关选中
+                doubanToggle.checked = true;
+                // 确保区域可见
+                doubanArea.classList.remove('hidden');
+                // 临时隐藏推荐内容，防止闪烁
+                doubanResults.style.display = 'none';
+                // 触发开关的change事件
+                const event = new Event('change');
+                doubanToggle.dispatchEvent(event);
+
+                // 清除可能的豆瓣缓存（需确认实际键名）
+                localStorage.removeItem('doubanCache');
+                localStorage.removeItem('doubanRecommendations');
+
+                // 直接调用刷新函数
+                if (typeof refreshDouban === 'function') {
+                    try {
+                        const refreshPromise = refreshDouban();
+                        if (refreshPromise && typeof refreshPromise.then === 'function') {
+                            refreshPromise.then(() => {
+                                doubanResults.style.display = 'grid';
+                            }).catch((err) => {
+                                console.error('豆瓣刷新失败:', err);
+                                doubanResults.style.display = 'grid';
+                            });
+                        } else {
+                            doubanResults.style.display = 'grid';
+                        }
+                    } catch (err) {
+                        console.error('调用refreshDouban失败:', err);
+                        doubanResults.style.display = 'grid';
+                    }
+                } else if (typeof loadDoubanRecommendations === 'function') {
+                    // 备选：调用加载函数
+                    try {
+                        const loadPromise = loadDoubanRecommendations();
+                        if (loadPromise && typeof loadPromise.then === 'function') {
+                            loadPromise.then(() => {
+                                doubanResults.style.display = 'grid';
+                            }).catch((err) => {
+                                console.error('豆瓣加载失败:', err);
+                                doubanResults.style.display = 'grid';
+                            });
+                        } else {
+                            doubanResults.style.display = 'grid';
+                        }
+                    } catch (err) {
+                        console.error('调用loadDoubanRecommendations失败:', err);
+                        doubanResults.style.display = 'grid';
+                    }
+                } else {
+                    // 最终备选：模拟“换一批”按钮点击
+                    const doubanRefreshBtn = document.getElementById('douban-refresh');
+                    if (doubanRefreshBtn) {
+                        doubanRefreshBtn.click();
+                        setTimeout(() => {
+                            doubanResults.style.display = 'grid';
+                        }, 500); // 调整延迟时间
+                    } else {
+                        doubanResults.style.display = 'grid';
+                    }
+                }
             }
         });
     </script>
