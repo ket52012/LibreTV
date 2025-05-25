@@ -438,22 +438,28 @@
     <!-- Initialize APIs and Douban recommendations -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            // Ensure all APIs are selected
+            // 确保所有API默认选中
             selectAllAPIs(true);
 
-            // Enable Douban recommendations by default
+            // 确保豆瓣推荐默认开启
             const doubanToggle = document.getElementById('doubanToggle');
             const doubanArea = document.getElementById('doubanArea');
             if (doubanToggle && doubanArea) {
-                doubanToggle.checked = true; // Ensure checkbox is checked
-                doubanArea.classList.remove('hidden'); // Ensure area is visible
-                // Trigger any event listener associated with the toggle
+                doubanToggle.checked = true; // 确保开关选中
+                doubanArea.classList.remove('hidden'); // 确保区域可见
+                // 触发开关的change事件，以调用相关逻辑
                 const event = new Event('change');
                 doubanToggle.dispatchEvent(event);
-                // If there's a specific function to load Douban content, call it
-                if (typeof loadDoubanRecommendations === 'function') {
-                    loadDoubanRecommendations();
-                }
+            }
+
+            // 模拟点击“换一批”按钮或直接调用刷新函数
+            const doubanRefreshBtn = document.getElementById('douban-refresh');
+            if (doubanRefreshBtn) {
+                // 触发“换一批”按钮的点击事件
+                doubanRefreshBtn.click();
+            } else if (typeof refreshDouban === 'function') {
+                // 直接调用刷新函数（如果存在）
+                refreshDouban();
             }
         });
     </script>
