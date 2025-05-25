@@ -272,13 +272,12 @@
             
             <!-- 搜索结果：初始隐藏 -->
             <div id="resultsArea" class="w-full hidden">
-                <div class="mx-auto max-w-7xl px-2"> <!-- 添加最大宽度限制并居中 -->
+                <div class="mx-auto max-w-7xl px-2">
                     <div class="flex justify-end items-center mb-4">
                         <div class="text-sm text-gray-400">
                             <span id="searchResultsCount">0</span> 个结果
                         </div>
                     </div>
-                    <!-- 修改网格布局以适应大一些的横向卡片 -->
                     <div id="results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         <!-- 结果将在这里动态生成 -->
                     </div>
@@ -435,11 +434,25 @@
     <!-- 添加弹窗和URL搜索参数处理脚本 -->
     <script src="js/index-page.js"></script>
 
-    <!-- Initialize APIs and Douban recommendations -->
+    <!-- Initialize APIs, Douban recommendations, and yellow filter -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            // Ensure all APIs are selected
+            // Ensure all APIs are selected, excluding test sources
             selectAllAPIs(true);
+
+            // Deselect test APIs (assuming test sources have "test" in name or empty URL)
+            const apiCheckboxes = document.querySelectorAll('#apiCheckboxes input[type="checkbox"]');
+            apiCheckboxes.forEach(checkbox => {
+                const label = document.querySelector(`label[for="${checkbox.id}"]`);
+                const apiName = label ? label.textContent.toLowerCase() : '';
+                // Assume test source if name contains "test" or "测试"
+                if (apiName.includes('test') || apiName.includes('测试')) {
+                    checkbox.checked = false;
+                }
+                // Trigger change event to update selectedApiCount
+                const event = new Event('change');
+                checkbox.dispatchEvent(event);
+            });
 
             // Enable Douban recommendations by default
             const doubanToggle = document.getElementById('doubanToggle');
@@ -455,12 +468,8 @@
                     loadDoubanRecommendations();
                 }
             }
-        });
-    </script>
 
-    <!-- Initialize yellow content filter to be off by default -->
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
+            // Ensure yellow content filter is off by default
             const yellowFilterToggle = document.getElementById('yellowFilterToggle');
             if (yellowFilterToggle) {
                 yellowFilterToggle.checked = false;
